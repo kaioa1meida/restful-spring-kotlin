@@ -1,11 +1,16 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/spring_restfull?useTimezone=true&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/spring_restful?useTimezone=true&serverTimezone=UTC
     username: root
     password: Admin123456
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
+spring-doc:
+  paths-to-match:
+    /api/v1/**/**
+  swagger-ui:
+    use-root-path: true
