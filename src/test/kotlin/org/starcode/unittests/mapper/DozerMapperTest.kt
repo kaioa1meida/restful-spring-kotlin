@@ -1,4 +1,4 @@
-package br.com.erudio.unittests.mapper
+package org.starcode.unittests.mapper
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.starcode.data.vo.PersonVO
 import org.starcode.mapper.DozerMapper
 import org.starcode.model.Person
-import org.starcode.unittests.mapper.mocks.MockPerson
+import org.starcode.unittests.mocks.MockPerson
 
 class DozerMapperTest {
 
