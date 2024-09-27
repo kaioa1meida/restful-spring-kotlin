@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 import org.starcode.exceptions.ExceptionResponse
+import org.starcode.exceptions.InvalidJwtAuthenticationException
 import org.starcode.exceptions.RequiredObjectIsNullException
 import org.starcode.exceptions.ResourceNotFoundException
 import java.util.*
@@ -45,6 +46,16 @@ class CustomizedResponseEntityExceptionHandler: ResponseEntityExceptionHandler()
             request.getDescription(false)
         )
         return ResponseEntity<ExceptionResponse>(exceptionResponse, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(InvalidJwtAuthenticationException::class)
+    fun handleInvalidJwtAuthenticationException(ex: Exception, request: WebRequest): ResponseEntity<ExceptionResponse>{
+        val exceptionResponse = ExceptionResponse(
+            Date(),
+            ex.message,
+            request.getDescription(false)
+        )
+        return ResponseEntity<ExceptionResponse>(exceptionResponse, HttpStatus.FORBIDDEN)
     }
 
 }
