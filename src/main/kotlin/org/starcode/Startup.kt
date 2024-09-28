@@ -23,7 +23,7 @@ fun main(args: Array<String>) {
 	val passwordEncoder = DelegatingPasswordEncoder("pbkdf2", encoders)
 	passwordEncoder.setDefaultPasswordEncoderForMatches(pbkdf2Encoder)
 
-	val result = passwordEncoder.encode("teste")
+	val result = passwordEncoder.encode("Admin123")
 	println("My hash $result")
 
 }
