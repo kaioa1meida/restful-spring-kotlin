@@ -1,14 +1,16 @@
 package org.starcode.integrationtests.vo
 
+import jakarta.xml.bind.annotation.XmlRootElement
 import java.util.Date
 
+@XmlRootElement
 data class TokenVO(
 
-    val username: String? = null,
-    val authenticated: Boolean? = null,
-    val created: Date? = null,
-    val expiration: Date? = null,
-    val accessToken: String? = null,
-    val refreshToken: String? = null
+    var username: String? = null,
+    var authenticated: Boolean? = null,
+    var created: Date? = null,
+    var expiration: Date? = null,
+    var accessToken: String? = null,
+    var refreshToken: String? = null
 
 )
