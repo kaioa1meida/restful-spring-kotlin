@@ -6,7 +6,6 @@ object TestConfigs {
     const val HEADER_PARAM_AUTHORIZATION = "Authorization"
 
     const val ORIGIN_LOCALHOST = "http://localhost:8080"
-
     const val ORIGIN_IBM = "http://www.ibm.com.br"
     
     const val CONTENT_TYPE_JSON = "application/json"
