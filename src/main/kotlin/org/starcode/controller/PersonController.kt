@@ -131,6 +131,34 @@ class PersonController {
         return ResponseEntity.status(HttpStatus.OK).body(updatedPerson)
     }
 
+    @PatchMapping(value = ["/{id}"], produces = [MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_YAML])
+    @Operation(summary = "Disable a one Person", description = "Disable a one Person By ID",
+        tags = ["People"],
+        responses = [
+            ApiResponse(description = "Success", responseCode = "202", content = [
+                Content(schema = Schema(implementation = PersonVO::class))
+            ]),
+            ApiResponse(description = "No Content", responseCode = "204", content = [
+                Content(schema = Schema(implementation = Unit::class))
+            ]),
+            ApiResponse(description = "Bad Request", responseCode = "400", content = [
+                Content(schema = Schema(implementation = Unit::class))
+            ]),
+            ApiResponse(description = "Unauthorized", responseCode = "401", content = [
+                Content(schema = Schema(implementation = Unit::class))
+            ]),
+            ApiResponse(description = "Not Found", responseCode = "404", content = [
+                Content(schema = Schema(implementation = Unit::class))
+            ]),
+            ApiResponse(description = "Internal Error", responseCode = "500", content = [
+                Content(schema = Schema(implementation = Unit::class))
+            ])
+        ]
+    )
+    fun disablePersonById(@PathVariable(value = "id") id: Long): ResponseEntity<PersonVO> {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(personService.disablePerson(id))
+    }
+
     @DeleteMapping(value = ["/{id}"], produces = [MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_YAML])
     @Operation(summary = "Deletes a one Person", description = "Deletes a one Person",
         tags = ["People"],
