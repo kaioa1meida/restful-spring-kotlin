@@ -1,5 +1,6 @@
 package org.starcode.services
 
+import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo
 import org.springframework.stereotype.Service
@@ -68,6 +69,20 @@ class PersonService {
         entity.gender = person.gender
 
         val personVO: PersonVO = DozerMapper.parseObject(repository.save(entity), PersonVO::class.java)
+        val withSelfRel = linkTo(PersonController::class.java).slash(personVO.key).withSelfRel()
+        personVO.add(withSelfRel)
+        return personVO
+    }
+
+    @Transactional
+    fun disablePerson(id: Long): PersonVO{
+        logger.info("Disabling one person with ID: $id!")
+
+        repository.disablePerson(id)
+
+        val person = repository.findById(id)
+            .orElseThrow { ResourceNotFoundException("No records found for this ID!") }
+        val personVO: PersonVO = DozerMapper.parseObject(person, PersonVO::class.java)
         val withSelfRel = linkTo(PersonController::class.java).slash(personVO.key).withSelfRel()
         personVO.add(withSelfRel)
         return personVO
