@@ -17,6 +17,7 @@ import org.starcode.integrationtests.testcontainers.AbstractIntegrationTest
 import org.starcode.integrationtests.vo.AccountCredentialsVO
 import org.starcode.integrationtests.vo.BookVO
 import org.starcode.integrationtests.vo.TokenVO
+import org.starcode.integrationtests.vo.wrappers.WrapperBookVO
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Date
@@ -201,7 +202,7 @@ class BookControllerXmlTest: AbstractIntegrationTest() {
 
     @Test
     @Order(5)
-    fun findAllPersons() {
+    fun findAllBooks() {
         val content = given()
             .spec(specification)
             .contentType(TestConfigs.CONTENT_TYPE_XML)
@@ -213,33 +214,33 @@ class BookControllerXmlTest: AbstractIntegrationTest() {
             .body()
             .asString()
 
-        val books = objectMapper.readValue(content, Array<BookVO>::class.java)
+        val wrapper = objectMapper.readValue(content, WrapperBookVO::class.java)
+        val books = wrapper.embedded!!.books
 
-        val book1 = books[0]
-        val book2 = books[1]
-        val book3 = books[3]
+        val book1 = books?.get(0)
+        val book2 = books?.get(1)
+        val book3 = books?.get(3)
 
-
-        assertEquals("Working effectively with legacy code", book1.title)
-        assertEquals("Michael C. Feathers", book1.author)
-        val localDate1 = LocalDate.of(2017, 11, 29) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
-        val date1 = Date.from(localDate1.atStartOfDay(ZoneId.systemDefault()).toInstant())
-        assertEquals(date1, book1.launchDate)
-        assertEquals(49.00, book1.price)
-
-        assertEquals("Clean Code", book2.title)
-        assertEquals("Robert C. Martin", book2.author)
+        assertEquals("Clean Code", book1!!.title)
+        assertEquals("Robert C. Martin", book1.author)
         val localDate2 = LocalDate.of(2009, 1, 10) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
         val date2 = Date.from(localDate2.atStartOfDay(ZoneId.systemDefault()).toInstant())
-        assertEquals(date2, book2.launchDate)
-        assertEquals(77.00, book2.price)
+        assertEquals(date2, book1.launchDate)
+        assertEquals(77.00, book1.price)
 
-        assertEquals("Code complete", book3.title)
-        assertEquals("Steve McConnell", book3.author)
+        assertEquals("Code complete", book2!!.title)
+        assertEquals("Steve McConnell", book2.author)
         val localDate3 = LocalDate.of(2017, 11, 7) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
         val date3 = Date.from(localDate3.atStartOfDay(ZoneId.systemDefault()).toInstant())
-        assertEquals(date3, book3.launchDate)
-        assertEquals(58.00, book3.price)
+        assertEquals(date3, book2.launchDate)
+        assertEquals(58.00, book2.price)
+
+        assertEquals("Working effectively with legacy code", book3!!.title)
+        assertEquals("Michael C. Feathers", book3.author)
+        val localDate1 = LocalDate.of(2017, 11, 29) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
+        val date1 = Date.from(localDate1.atStartOfDay(ZoneId.systemDefault()).toInstant())
+        assertEquals(date1, book3.launchDate)
+        assertEquals(49.00, book3.price)
     }
 
     @Test
@@ -265,7 +266,62 @@ class BookControllerXmlTest: AbstractIntegrationTest() {
             .asString()
     }
 
+    @Test
+    @Order(7)
+    fun findBookByTitle() {
+        val content = given()
+            .spec(specification)
+            .contentType(TestConfigs.CONTENT_TYPE_XML)
+            .`when`()
+            .pathParam("title", "Java")
+            .queryParams(
+                "page", 0,
+                "size",12,
+                "direction", "asc")
+            .get("/findBookByTitle/{title}")
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .asString()
 
+        val wrapper = objectMapper.readValue(content, WrapperBookVO::class.java)
+        val books = wrapper.embedded!!.books
+
+        val book1 = books?.get(0)
+
+        assertEquals("JavaScript", book1!!.title)
+        assertEquals("Crockford", book1.author)
+        assertEquals(67.00, book1.price)
+    }
+
+    @Test
+    @Order(8)
+    fun testHATEOAS() {
+        val content = given()
+            .spec(specification)
+            .contentType(TestConfigs.CONTENT_TYPE_XML)
+            .queryParams(
+                "page", 0,
+                "size",12,
+                "direction", "asc")
+            .`when`()
+            .get()
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .asString()
+
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/2"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/4"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/3"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/1"}}}"""))
+
+        assertTrue(content.contains(""""self":{"href":"http://localhost:8888/api/v1/book?direction=asc&page=0&size=12&sort=title,asc"}"""))
+
+        assertTrue(content.contains(""""page":{"size":12,"totalElements":4,"totalPages":1,"number":0}}"""))
+    }
 
     private fun mockBook() {
         bookVO.title = "Think in Python"
