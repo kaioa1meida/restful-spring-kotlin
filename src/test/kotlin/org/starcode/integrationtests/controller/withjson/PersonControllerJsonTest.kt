@@ -2,11 +2,15 @@ package org.starcode.integrationtests.controller.withjson
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.restassured.RestAssured.given
 import io.restassured.builder.RequestSpecBuilder
+import io.restassured.config.EncoderConfig
+import io.restassured.config.RestAssuredConfig
 import io.restassured.filter.log.LogDetail
 import io.restassured.filter.log.RequestLoggingFilter
 import io.restassured.filter.log.ResponseLoggingFilter
+import io.restassured.http.ContentType
 import io.restassured.specification.RequestSpecification
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
@@ -17,6 +21,7 @@ import org.starcode.integrationtests.testcontainers.AbstractIntegrationTest
 import org.starcode.integrationtests.vo.AccountCredentialsVO
 import org.starcode.integrationtests.vo.PersonVO
 import org.starcode.integrationtests.vo.TokenVO
+import org.starcode.integrationtests.vo.wrappers.WrapperPersonVO
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
@@ -229,6 +234,7 @@ class PersonControllerJsonTest : AbstractIntegrationTest() {
             .body()
             .asString()
     }
+
     @Test
     @Order(6)
     fun findAllPersons() {
@@ -236,6 +242,10 @@ class PersonControllerJsonTest : AbstractIntegrationTest() {
             .spec(specification)
             .contentType(TestConfigs.CONTENT_TYPE_JSON)
             .`when`()
+            .queryParams(
+                "page", 3,
+                "size",12,
+                "direction", "asc")
             .get()
             .then()
             .statusCode(200)
@@ -243,29 +253,30 @@ class PersonControllerJsonTest : AbstractIntegrationTest() {
             .body()
             .asString()
 
-        val persons = objectMapper.readValue(content, Array<PersonVO>::class.java)
+        val wrapper = objectMapper.readValue(content, WrapperPersonVO::class.java)
+        val peoples = wrapper.embedded!!.persons
 
-        val person1 = persons[0]
-        val person2 = persons[3]
-        val person3 = persons[5]
+        val person1 = peoples?.get(0)
+        val person2 = peoples?.get(3)
+        val person3 = peoples?.get(5)
 
 
-        assertEquals("Ayrton", person1.firstName)
-        assertEquals("Senna", person1.lastName)
-        assertEquals("São Paulo", person1.address)
+        assertEquals("Allin", person1!!.firstName)
+        assertEquals("Emmot", person1.lastName)
+        assertEquals("7913 Lindbergh Way", person1.address)
         assertEquals("Male", person1.gender)
-        assertEquals(true, person1.enabled)
+        assertEquals(false, person1.enabled)
 
-        assertEquals("Mahatma", person2.firstName)
-        assertEquals("Gandhi", person2.lastName)
-        assertEquals("Porbandar - India", person2.address)
-        assertEquals("Male", person2.gender)
-        assertEquals(true, person2.enabled)
+        assertEquals("Almeria", person2!!.firstName)
+        assertEquals("Curm", person2.lastName)
+        assertEquals("34 Burrows Point", person2.address)
+        assertEquals("Female", person2.gender)
+        assertEquals(false, person2.enabled)
 
 
-        assertEquals("Nelson", person3.firstName)
-        assertEquals("Mandela", person3.lastName)
-        assertEquals("Mvezo - South Africa", person3.address)
+        assertEquals("Alphonso", person3!!.firstName)
+        assertEquals("Eddisforth", person3.lastName)
+        assertEquals("485 Dayton Avenue", person3.address)
         assertEquals("Male", person3.gender)
         assertEquals(true, person3.enabled)
 
@@ -273,6 +284,38 @@ class PersonControllerJsonTest : AbstractIntegrationTest() {
 
     @Test
     @Order(7)
+    fun findFindPersonByName() {
+        val content = given()
+            .spec(specification)
+            .contentType(TestConfigs.CONTENT_TYPE_JSON)
+            .`when`()
+            .pathParam("firstName", "Ayr")
+            .queryParams(
+                "page", 0,
+                "size",12,
+                "direction", "asc")
+            .get("/findPersonByName/{firstName}")
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .asString()
+
+        val wrapper = objectMapper.readValue(content, WrapperPersonVO::class.java)
+        val peoples = wrapper.embedded!!.persons
+
+        val person1 = peoples?.get(0)
+
+        assertEquals("Ayrton", person1!!.firstName)
+        assertEquals("Senna", person1.lastName)
+        assertEquals("São Paulo", person1.address)
+        assertEquals("Male", person1.gender)
+        assertEquals(true, person1.enabled)
+
+    }
+
+    @Test
+    @Order(8)
     fun findAllPersonsWithoutToken() {
 
         val specificationWithoutToken = RequestSpecBuilder()
@@ -292,6 +335,38 @@ class PersonControllerJsonTest : AbstractIntegrationTest() {
             .extract()
             .body()
             .asString()
+    }
+
+    @Test
+    @Order(9)
+    fun testHATEOAS() {
+        val content = given()
+            .spec(specification)
+            .contentType(TestConfigs.CONTENT_TYPE_JSON)
+            .queryParams(
+                "page", 3,
+                "size",12,
+                "direction", "asc")
+            .`when`()
+            .get()
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .asString()
+
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/person/797"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/person/199"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/person/687"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/person/209"}}}"""))
+
+        assertTrue(content.contains("""{"first":{"href":"http://localhost:8888/api/v1/person?direction=asc&page=0&size=12&sort=firstName,asc"}"""))
+        assertTrue(content.contains(""","prev":{"href":"http://localhost:8888/api/v1/person?direction=asc&page=2&size=12&sort=firstName,asc"}"""))
+        assertTrue(content.contains(""","self":{"href":"http://localhost:8888/api/v1/person?direction=asc&page=3&size=12&sort=firstName,asc"}"""))
+        assertTrue(content.contains(""","next":{"href":"http://localhost:8888/api/v1/person?direction=asc&page=4&size=12&sort=firstName,asc"}"""))
+        assertTrue(content.contains(""","last":{"href":"http://localhost:8888/api/v1/person?direction=asc&page=83&size=12&sort=firstName,asc"}"""))
+
+        assertTrue(content.contains(""""page":{"size":12,"totalElements":1007,"totalPages":84,"number":3}}"""))
     }
 
     private fun mockPerson() {

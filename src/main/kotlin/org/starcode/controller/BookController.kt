@@ -7,6 +7,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.hateoas.EntityModel
+import org.springframework.hateoas.PagedModel
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -17,7 +22,7 @@ import org.starcode.utils.MediaType
 
 @RestController
 @RequestMapping("/api/v1/book")
-@Tag(name = "Book", description = "Endpoints for manage peoples")
+@Tag(name = "Book", description = "Endpoints for manage Books")
 class BookController {
 
     @Autowired
@@ -47,10 +52,54 @@ class BookController {
             ]),
         ]
     )
-    fun findAll(): ResponseEntity<List<BookVO>> {
-        return ResponseEntity.status(HttpStatus.OK).body(bookService.findAll())
+    fun findAll(
+        @RequestParam(value = "page", defaultValue = "0") page: Int,
+        @RequestParam(value = "size", defaultValue = "12") size: Int,
+        @RequestParam(value = "direction", defaultValue = "asc") direction: String
+    ): ResponseEntity<PagedModel<EntityModel<BookVO>>> {
+
+        val sortDirection: Sort.Direction = if("desc".equals(direction, ignoreCase = true)) Sort.Direction.DESC else Sort.Direction.ASC
+        val pageable: Pageable = PageRequest.of(page, size, Sort.by(sortDirection, "title"))
+
+        return ResponseEntity.status(HttpStatus.OK).body(bookService.findAll(pageable))
     }
 
+    @GetMapping(value = ["/findBookByTitle/{title}"],produces = [MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_YAML])
+    @Operation(summary = "Finds Book by Title", description = "Finds a Book by Title",
+        tags = ["Book"],
+        responses = [
+            ApiResponse(description = "Success", responseCode = "200", content = [
+                Content(array = ArraySchema(schema = Schema(implementation = BookVO::class)))
+            ]),
+            ApiResponse(description = "No Content", responseCode = "204", content = [
+                Content(schema = Schema(implementation = Unit::class))
+            ]),
+            ApiResponse(description = "Bad Request", responseCode = "400", content = [
+                Content(schema = Schema(implementation = Unit::class))
+            ]),
+            ApiResponse(description = "Unauthorized", responseCode = "401", content = [
+                Content(schema = Schema(implementation = Unit::class))
+            ]),
+            ApiResponse(description = "Not Found", responseCode = "404", content = [
+                Content(schema = Schema(implementation = Unit::class))
+            ]),
+            ApiResponse(description = "Internal Error", responseCode = "500", content = [
+                Content(schema = Schema(implementation = Unit::class))
+            ]),
+        ]
+    )
+    fun findBookByTitle(
+        @PathVariable(value = "title") title: String,
+        @RequestParam(value = "page", defaultValue = "0") page: Int,
+        @RequestParam(value = "size", defaultValue = "12") size: Int,
+        @RequestParam(value = "direction", defaultValue = "asc") direction: String
+    ): ResponseEntity<PagedModel<EntityModel<BookVO>>> {
+
+        val sortDirection: Sort.Direction = if("desc".equals(direction, ignoreCase = true)) Sort.Direction.DESC else Sort.Direction.ASC
+        val pageable: Pageable = PageRequest.of(page, size, Sort.by(sortDirection, "title"))
+
+        return ResponseEntity.status(HttpStatus.OK).body(bookService.findBookByTitle(title, pageable))
+    }
 
     @GetMapping(value = ["/{id}"], produces = [MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_YAML])
     @Operation(summary = "Finds a one Book", description = "Finds a one Book",

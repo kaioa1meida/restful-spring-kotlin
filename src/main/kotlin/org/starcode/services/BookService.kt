@@ -1,6 +1,10 @@
 package org.starcode.services
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PagedResourcesAssembler
+import org.springframework.hateoas.EntityModel
+import org.springframework.hateoas.PagedModel
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo
 import org.springframework.stereotype.Service
 import org.starcode.controller.BookController
@@ -17,21 +21,33 @@ class BookService {
 
     @Autowired
     private lateinit var repository: BookRepository
+    @Autowired
+    private lateinit var assembler: PagedResourcesAssembler<BookVO>
 
     private val logger = Logger.getLogger(BookService::class.java.name)
 
-    fun findAll(): List<BookVO> {
+    fun findAll(pageable: Pageable): PagedModel<EntityModel<BookVO>> {
         logger.info("Finding all books!")
 
-        val books = repository.findAll()
+        val books = repository.findAll(pageable)
 
-        val vos = DozerMapper.parseListObjects(books, BookVO::class.java)
+        val vos = books.map { b -> DozerMapper.parseObject(b, BookVO::class.java) }
 
-        for (book in vos){
-            val withSelfRel = linkTo(BookController::class.java).slash(book.key).withSelfRel()
-            book.add(withSelfRel)
-        }
-        return vos
+        vos.map { b -> b.add(linkTo(BookController::class.java).slash(b.key).withSelfRel()) }
+
+        return assembler.toModel(vos)
+    }
+
+    fun findBookByTitle(title: String, pageable: Pageable): PagedModel<EntityModel<BookVO>> {
+        logger.info("Finding Books by Title!")
+
+        val books = repository.findBookByTitle(title, pageable)
+
+        val vos = books.map { b -> DozerMapper.parseObject(b, BookVO::class.java) }
+
+        vos.map { b -> b.add(linkTo(BookController::class.java).slash(b.key).withSelfRel()) }
+
+        return assembler.toModel(vos)
     }
 
     fun findById(id: Long): BookVO {

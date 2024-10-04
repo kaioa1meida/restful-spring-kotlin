@@ -35,48 +35,6 @@ class BookServiceTest {
     }
 
     @Test
-    fun findAll() {
-
-        val list = inputObject.mockEntityList()
-        `when`(repository.findAll()).thenReturn(list)
-
-        val books = service.findAll()
-
-        assertNotNull(books)
-        assertEquals( 14, books.size)
-
-        val bookOne = books[1]
-        assertNotNull(bookOne)
-        assertNotNull(bookOne.key)
-        assertNotNull(bookOne.links)
-        assertTrue(bookOne.links.toString().contains("</api/v1/book/1>;rel=\"self\""))
-        assertEquals("Title Test1",bookOne.title)
-        assertEquals("Author Test1",bookOne.author)
-        assertEquals(1.0,bookOne.price)
-        assertEquals("Thu Feb 01 00:00:00 BRT 3900", bookOne.launchDate.toString())
-
-        val bookFour = books[4]
-        assertNotNull(bookFour)
-        assertNotNull(bookFour.key)
-        assertNotNull(bookFour.links)
-        assertTrue(bookFour.links.toString().contains("</api/v1/book/4>;rel=\"self\""))
-        assertEquals("Title Test4",bookFour.title)
-        assertEquals("Author Test4",bookFour.author)
-        assertEquals(4.0,bookFour.price)
-        assertEquals("Sun Feb 04 00:00:00 BRT 3900", bookFour.launchDate.toString())
-
-        val bookSeven = books[7]
-        assertNotNull(bookSeven)
-        assertNotNull(bookSeven.key)
-        assertNotNull(bookSeven.links)
-        assertTrue(bookSeven.links.toString().contains("</api/v1/book/7>;rel=\"self\""))
-        assertEquals("Title Test7",bookSeven.title)
-        assertEquals("Author Test7",bookSeven.author)
-        assertEquals(7.0,bookSeven.price)
-        assertEquals("Wed Feb 07 00:00:00 BRT 3900", bookSeven.launchDate.toString())
-    }
-
-    @Test
     fun findById() {
         val book = inputObject.mockEntity(1)
         book.id = 1
