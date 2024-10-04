@@ -1,5 +1,12 @@
 package org.starcode.integrationtests.controller.withyaml
 
+import org.starcode.integrationtests.TestConfigs
+import org.starcode.integrationtests.controller.withyaml.mapper.YAMLMapper
+import org.starcode.integrationtests.testcontainers.AbstractIntegrationTest
+import org.starcode.integrationtests.vo.AccountCredentialsVO
+import org.starcode.integrationtests.vo.PersonVO
+import org.starcode.integrationtests.vo.TokenVO
+import org.starcode.integrationtests.vo.wrappers.WrapperPersonVO
 import io.restassured.RestAssured.given
 import io.restassured.builder.RequestSpecBuilder
 import io.restassured.config.EncoderConfig
@@ -11,28 +18,21 @@ import io.restassured.http.ContentType
 import io.restassured.specification.RequestSpecification
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.springframework.boot.test.context.SpringBootTest
-import org.starcode.integrationtests.TestConfigs
-import org.starcode.integrationtests.controller.withyaml.mapper.YAMLMapper
-import org.starcode.integrationtests.testcontainers.AbstractIntegrationTest
-import org.starcode.integrationtests.vo.AccountCredentialsVO
-import org.starcode.integrationtests.vo.PersonVO
-import org.starcode.integrationtests.vo.TokenVO
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
-@TestInstance(Lifecycle.PER_CLASS)
-class PersonControllerYamlTest : AbstractIntegrationTest() {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class PersonControllerYmlTest : AbstractIntegrationTest() {
 
     private lateinit var specification: RequestSpecification
     private lateinit var objectMapper: YAMLMapper
-    private lateinit var personVO: PersonVO
+    private lateinit var person: PersonVO
 
     @BeforeAll
-    fun setupTests() {
-        objectMapper = YAMLMapper() // Converte as Responses(String) para Objetos(PersonVO) Java
-        personVO = PersonVO()
+    fun setupTests(){
+        objectMapper = YAMLMapper()
+        person = PersonVO()
     }
 
     @Test
@@ -67,19 +67,19 @@ class PersonControllerYamlTest : AbstractIntegrationTest() {
 
         specification = RequestSpecBuilder()
             .addHeader(TestConfigs.HEADER_PARAM_AUTHORIZATION, "Bearer $token")
-                .setBasePath("/api/v1/person")
+            .setBasePath("/api/v1/person")
             .setPort(TestConfigs.SERVER_PORT)
-                .addFilter(RequestLoggingFilter(LogDetail.ALL))
-                .addFilter(ResponseLoggingFilter(LogDetail.ALL))
+            .addFilter(RequestLoggingFilter(LogDetail.ALL))
+            .addFilter(ResponseLoggingFilter(LogDetail.ALL))
             .build()
     }
 
     @Test
     @Order(1)
-    fun testCreatePerson() {
+    fun testCreate() {
         mockPerson()
 
-        val createdPerson = given()
+        val item = given()
             .config(
                 RestAssuredConfig
                     .config()
@@ -90,43 +90,77 @@ class PersonControllerYamlTest : AbstractIntegrationTest() {
             )
             .spec(specification)
             .contentType(TestConfigs.CONTENT_TYPE_YAML)
-            .accept(TestConfigs.CONTENT_TYPE_YAML)
-            .body(personVO, objectMapper)
+            .body(person, objectMapper)
             .`when`()
             .post()
             .then()
-            .assertThat()
             .statusCode(201)
             .extract()
             .body()
             .`as`(PersonVO::class.java, objectMapper)
 
-        personVO = createdPerson
+        person = item
 
-        assertNotNull(createdPerson.id)
-        assertNotNull(createdPerson.firstName)
-        assertNotNull(createdPerson.lastName)
-        assertNotNull(createdPerson.address)
-        assertNotNull(createdPerson.gender)
-        assertNotNull(createdPerson.enabled)
-
-        assertTrue(createdPerson.id > 0)
-
-        assertEquals("James", createdPerson.firstName)
-        assertEquals("Gosling", createdPerson.lastName)
-        assertEquals("Calgary, Canadá", createdPerson.address)
-        assertEquals("Male", createdPerson.gender)
-        assertEquals(true, createdPerson.enabled)
+        assertNotNull(item.id)
+        assertTrue(item.id > 0)
+        assertNotNull(item.firstName)
+        assertNotNull(item.lastName)
+        assertNotNull(item.address)
+        assertNotNull(item.gender)
+        assertEquals("Richard", item.firstName)
+        assertEquals("Stallman", item.lastName)
+        assertEquals("New York City, New York, US", item.address)
+        assertEquals("Male", item.gender)
+        assertEquals(true, item.enabled)
     }
 
     @Test
     @Order(2)
-    fun testDisablePerson() {
+    fun testUpdate() {
+        person.lastName = "Matthew Stallman"
 
-        val receivedPerson = given()
+        val item = given()
+            .config(
+                RestAssuredConfig
+                    .config()
+                    .encoderConfig(
+                        EncoderConfig.encoderConfig()
+                            .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YAML, ContentType.TEXT)
+                    )
+            )
             .spec(specification)
             .contentType(TestConfigs.CONTENT_TYPE_YAML)
-            .pathParam("id", personVO.id)
+            .body(person, objectMapper)
+            .`when`()
+            .put()
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .`as`(PersonVO::class.java, objectMapper)
+
+        person = item
+
+        assertNotNull(item.id)
+        assertNotNull(item.firstName)
+        assertNotNull(item.lastName)
+        assertNotNull(item.address)
+        assertNotNull(item.gender)
+        assertEquals(person.id, item.id)
+        assertEquals("Richard", item.firstName)
+        assertEquals("Matthew Stallman", item.lastName)
+        assertEquals("New York City, New York, US", item.address)
+        assertEquals("Male", item.gender)
+        assertEquals(true, item.enabled)
+    }
+
+    @Test
+    @Order(3)
+    fun testDisablePersonById() {
+        val item = given()
+            .spec(specification)
+            .contentType(TestConfigs.CONTENT_TYPE_YAML)
+            .pathParam("id", person.id)
             .`when`()
             .patch("{id}")
             .then()
@@ -135,27 +169,25 @@ class PersonControllerYamlTest : AbstractIntegrationTest() {
             .body()
             .`as`(PersonVO::class.java, objectMapper)
 
-        assertNotNull(receivedPerson.id)
-        assertNotNull(receivedPerson.firstName)
-        assertNotNull(receivedPerson.lastName)
-        assertNotNull(receivedPerson.address)
-        assertNotNull(receivedPerson.gender)
-        assertNotNull(receivedPerson.enabled)
+        person = item
 
-        assertTrue(receivedPerson.id > 0)
-
-        assertEquals("James", receivedPerson.firstName)
-        assertEquals("Gosling", receivedPerson.lastName)
-        assertEquals("Calgary, Canadá", receivedPerson.address)
-        assertEquals("Male", receivedPerson.gender)
-        assertEquals(false, receivedPerson.enabled)
+        assertNotNull(item.id)
+        assertNotNull(item.firstName)
+        assertNotNull(item.lastName)
+        assertNotNull(item.address)
+        assertNotNull(item.gender)
+        assertEquals(person.id, item.id)
+        assertEquals("Richard", item.firstName)
+        assertEquals("Matthew Stallman", item.lastName)
+        assertEquals("New York City, New York, US", item.address)
+        assertEquals("Male", item.gender)
+        assertEquals(false, item.enabled)
     }
 
     @Test
-    @Order(3)
-    fun testFindOnePerson() {
-
-        val receivedPerson = given()
+    @Order(4)
+    fun testFindById() {
+        val item = given()
             .config(
                 RestAssuredConfig
                     .config()
@@ -166,8 +198,7 @@ class PersonControllerYamlTest : AbstractIntegrationTest() {
             )
             .spec(specification)
             .contentType(TestConfigs.CONTENT_TYPE_YAML)
-            .accept(TestConfigs.CONTENT_TYPE_YAML)
-            .pathParam("id", personVO.id)
+            .pathParam("id", person.id)
             .`when`()
             .get("{id}")
             .then()
@@ -176,98 +207,37 @@ class PersonControllerYamlTest : AbstractIntegrationTest() {
             .body()
             .`as`(PersonVO::class.java, objectMapper)
 
-        assertNotNull(receivedPerson.id)
-        assertNotNull(receivedPerson.firstName)
-        assertNotNull(receivedPerson.lastName)
-        assertNotNull(receivedPerson.address)
-        assertNotNull(receivedPerson.gender)
-        assertNotNull(receivedPerson.enabled)
+        person = item
 
-        assertTrue(receivedPerson.id > 0)
-
-        assertEquals("James", receivedPerson.firstName)
-        assertEquals("Gosling", receivedPerson.lastName)
-        assertEquals("Calgary, Canadá", receivedPerson.address)
-        assertEquals("Male", receivedPerson.gender)
-        assertEquals(false, receivedPerson.enabled)
-
-    }
-
-    @Test
-    @Order(4)
-    fun testUpdatePerson() {
-
-        val dataToUpdate = personVO
-
-        dataToUpdate.firstName = "James"
-        dataToUpdate.lastName = "Gosling 'Java Father'"
-        dataToUpdate.address = "Calgary, CA, Canadá"
-        dataToUpdate.gender = "Male"
-
-        val updatedPerson = given()
-            .config(
-                RestAssuredConfig
-                    .config()
-                    .encoderConfig(
-                        EncoderConfig.encoderConfig()
-                            .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YAML, ContentType.TEXT)
-                    )
-            )
-            .spec(specification)
-            .contentType(TestConfigs.CONTENT_TYPE_YAML)
-            .accept(TestConfigs.CONTENT_TYPE_YAML)
-            .body(dataToUpdate, objectMapper)
-            .`when`()
-            .put()
-            .then()
-            .assertThat()
-            .statusCode(200)
-            .extract()
-            .body()
-            .`as`(PersonVO::class.java, objectMapper)
-
-        assertNotNull(updatedPerson.id)
-        assertNotNull(updatedPerson.firstName)
-        assertNotNull(updatedPerson.lastName)
-        assertNotNull(updatedPerson.address)
-        assertNotNull(updatedPerson.gender)
-        assertNotNull(updatedPerson.enabled)
-
-        assertTrue(updatedPerson.id > 0)
-
-        assertEquals(personVO.id, updatedPerson.id)
-        assertEquals("James", updatedPerson.firstName)
-        assertEquals("Gosling 'Java Father'", updatedPerson.lastName)
-        assertEquals("Calgary, CA, Canadá", updatedPerson.address)
-        assertEquals("Male", updatedPerson.gender)
-        assertEquals(false, updatedPerson.enabled)
-
+        assertNotNull(item.id)
+        assertNotNull(item.firstName)
+        assertNotNull(item.lastName)
+        assertNotNull(item.address)
+        assertNotNull(item.gender)
+        assertEquals(person.id, item.id)
+        assertEquals("Richard", item.firstName)
+        assertEquals("Matthew Stallman", item.lastName)
+        assertEquals("New York City, New York, US", item.address)
+        assertEquals("Male", item.gender)
+        assertEquals(false, item.enabled)
     }
 
     @Test
     @Order(5)
-    fun testDeletePerson() {
-
+    fun testDelete() {
         given()
-            .config(
-                RestAssuredConfig
-                    .config()
-                    .encoderConfig(
-                        EncoderConfig.encoderConfig()
-                            .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YAML, ContentType.TEXT)
-                    )
-            )
             .spec(specification)
-            .pathParam("id", personVO.id)
+            .pathParam("id", person.id)
             .`when`()
             .delete("{id}")
             .then()
             .statusCode(204)
     }
+
     @Test
     @Order(6)
-    fun findAllPersons() {
-        val persons = given()
+    fun testFindAll() {
+        val wrapper = given()
             .config(
                 RestAssuredConfig
                     .config()
@@ -278,47 +248,94 @@ class PersonControllerYamlTest : AbstractIntegrationTest() {
             )
             .spec(specification)
             .contentType(TestConfigs.CONTENT_TYPE_YAML)
-            .accept(TestConfigs.CONTENT_TYPE_YAML)
+            .queryParams(
+                "page", 3,
+                "size",12,
+                "direction", "asc")
             .`when`()
             .get()
             .then()
             .statusCode(200)
             .extract()
             .body()
-            .`as`(Array<PersonVO>::class.java, objectMapper)
+            .`as`(WrapperPersonVO::class.java, objectMapper)
 
-        val person1 = persons[0]
-        val person2 = persons[3]
-        val person3 = persons[5]
+        val peoples = wrapper.embedded!!.persons
 
-        assertEquals("Ayrton", person1.firstName)
-        assertEquals("Senna", person1.lastName)
-        assertEquals("São Paulo", person1.address)
+        val person1 = peoples?.get(0)
+        val person2 = peoples?.get(3)
+        val person3 = peoples?.get(5)
+
+
+        assertEquals("Allin", person1!!.firstName)
+        assertEquals("Emmot", person1.lastName)
+        assertEquals("7913 Lindbergh Way", person1.address)
         assertEquals("Male", person1.gender)
-        assertEquals(true, person1.enabled)
+        assertEquals(false, person1.enabled)
+
+        assertEquals("Almeria", person2!!.firstName)
+        assertEquals("Curm", person2.lastName)
+        assertEquals("34 Burrows Point", person2.address)
+        assertEquals("Female", person2.gender)
+        assertEquals(false, person2.enabled)
 
 
-        assertEquals("Mahatma", person2.firstName)
-        assertEquals("Gandhi", person2.lastName)
-        assertEquals("Porbandar - India", person2.address)
-        assertEquals("Male", person2.gender)
-        assertEquals(true, person2.enabled)
-
-
-        assertEquals("Nelson", person3.firstName)
-        assertEquals("Mandela", person3.lastName)
-        assertEquals("Mvezo - South Africa", person3.address)
+        assertEquals("Alphonso", person3!!.firstName)
+        assertEquals("Eddisforth", person3.lastName)
+        assertEquals("485 Dayton Avenue", person3.address)
         assertEquals("Male", person3.gender)
         assertEquals(true, person3.enabled)
-    }
 
+    }
 
     @Test
     @Order(7)
-    fun findAllPersonsWithoutToken() {
+    fun testFindPersonByName() {
+        val wrapper = given()
+            .config(
+                RestAssuredConfig
+                    .config()
+                    .encoderConfig(
+                        EncoderConfig.encoderConfig()
+                            .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YAML, ContentType.TEXT)
+                    )
+            )
+            .spec(specification)
+            .contentType(TestConfigs.CONTENT_TYPE_YAML)
+            .pathParam("firstName", "Ayr")
+            .queryParams(
+                "page", 0,
+                "size", 12,
+                "direction", "asc")
+            .`when`()["findPersonByName/{firstName}"]
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .`as`(WrapperPersonVO::class.java, objectMapper)
 
-        val specificationWithoutToken = RequestSpecBuilder()
-            .setBasePath("/api/v1/person")
+        val people = wrapper.embedded!!.persons
+
+        val item1 = people?.get(0)
+
+        assertNotNull(item1!!.id)
+        assertNotNull(item1.firstName)
+        assertNotNull(item1.lastName)
+        assertNotNull(item1.address)
+        assertNotNull(item1.gender)
+        assertEquals("Ayrton", item1.firstName)
+        assertEquals("Senna", item1.lastName)
+        assertEquals("São Paulo", item1.address)
+        assertEquals("Male", item1.gender)
+        assertEquals(true, item1.enabled)
+    }
+
+    @Test
+    @Order(8)
+    fun testFindAllWithoutToken() {
+
+        val specificationWithoutToken: RequestSpecification = RequestSpecBuilder()
+            .setBasePath("/api/person/v1")
             .setPort(TestConfigs.SERVER_PORT)
             .addFilter(RequestLoggingFilter(LogDetail.ALL))
             .addFilter(ResponseLoggingFilter(LogDetail.ALL))
@@ -335,17 +352,61 @@ class PersonControllerYamlTest : AbstractIntegrationTest() {
             )
             .spec(specificationWithoutToken)
             .contentType(TestConfigs.CONTENT_TYPE_YAML)
-            .accept(TestConfigs.CONTENT_TYPE_YAML)
             .`when`()
             .get()
             .then()
             .statusCode(403)
+            .extract()
+            .body()
+            .asString()
+
+    }
+
+    @Test
+    @Order(9)
+    fun testHATEOAS() {
+        val content = given()
+            .config(
+                RestAssuredConfig
+                    .config()
+                    .encoderConfig(
+                        EncoderConfig.encoderConfig()
+                            .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YAML, ContentType.TEXT)
+                    )
+            )
+            .spec(specification)
+            .contentType(TestConfigs.CONTENT_TYPE_YAML)
+            .queryParams(
+                "page", 3,
+                "size",12,
+                "direction", "asc")
+            .`when`()
+            .get()
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .asString()
+
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/person/797"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/person/199"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/person/687"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/person/209"}}}"""))
+
+        assertTrue(content.contains("""{"first":{"href":"http://localhost:8888/api/v1/person?direction=asc&page=0&size=12&sort=firstName,asc"}"""))
+        assertTrue(content.contains(""","prev":{"href":"http://localhost:8888/api/v1/person?direction=asc&page=2&size=12&sort=firstName,asc"}"""))
+        assertTrue(content.contains(""","self":{"href":"http://localhost:8888/api/v1/person?direction=asc&page=3&size=12&sort=firstName,asc"}"""))
+        assertTrue(content.contains(""","next":{"href":"http://localhost:8888/api/v1/person?direction=asc&page=4&size=12&sort=firstName,asc"}"""))
+        assertTrue(content.contains(""","last":{"href":"http://localhost:8888/api/v1/person?direction=asc&page=83&size=12&sort=firstName,asc"}"""))
+
+        assertTrue(content.contains(""""page":{"size":12,"totalElements":1007,"totalPages":84,"number":3}}"""))
     }
 
     private fun mockPerson() {
-        personVO.firstName = "James"
-        personVO.lastName = "Gosling"
-        personVO.address = "Calgary, Canadá"
-        personVO.gender = "Male"
+        person.firstName = "Richard"
+        person.lastName = "Stallman"
+        person.address = "New York City, New York, US"
+        person.gender = "Male"
+        person.enabled = true
     }
 }
