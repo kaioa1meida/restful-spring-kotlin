@@ -28,7 +28,7 @@ jobs:
         cache: maven
 
     - name: Build Application Jar
-      working-directory: ./restful-spring-kotlin
+      working-directory: ./
       run: mvn clean package
 
     - name: Docker Compose Build
