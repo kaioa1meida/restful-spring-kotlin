@@ -13,7 +13,11 @@
 
 ## Visão Geral
 
-Esta documentação descreve a API RESTful criada com Kotlin e Spring Boot, que permite a interação com um banco de dados MySQL. A API foi desenvolvida para gerenciar Usuários e Livros
+API foi criada com Kotlin e Spring Boot, que permite a interação com um banco de dados MySQL. A API foi desenvolvida para gerenciar Usuários e Livros
+
+## Objetivo Real
+
+Criei essa API em um processo de aprendizado em assuntos como API's Restful, JWT, HATEOAS, RestAssured, Testcontainers, Docker
 
 ## Tecnologias Utilizadas
 
