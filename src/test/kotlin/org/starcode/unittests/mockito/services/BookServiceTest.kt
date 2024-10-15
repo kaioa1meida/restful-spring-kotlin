@@ -14,6 +14,8 @@ import org.starcode.exceptions.RequiredObjectIsNullException
 import org.starcode.repository.BookRepository
 import org.starcode.services.BookService
 import org.starcode.unittests.mocks.MockBook
+import java.time.LocalDate
+import java.time.ZoneId
 
 import java.util.*
 
@@ -71,7 +73,9 @@ class BookServiceTest {
         assertEquals("Title Test1",result.title)
         assertEquals("Author Test1",result.author)
         assertEquals(1.0,result.price)
-        assertEquals("Sat Jan 01 00:00:00 BRST 2000", result.launchDate.toString())
+        val localDate = LocalDate.of(2000, 1, 1) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
+        val date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
+        assertEquals(date, result.launchDate)
     }
 
     @Test
@@ -108,8 +112,9 @@ class BookServiceTest {
         assertEquals("Title Test1",result.title)
         assertEquals("Author Test1",result.author)
         assertEquals(1.0,result.price)
-        assertEquals("Sat Jan 01 00:00:00 BRST 2000", result.launchDate.toString())
-
+        val localDate = LocalDate.of(2000, 1, 1) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
+        val date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
+        assertEquals(date, result.launchDate)
     }
 
     @Test
