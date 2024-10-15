@@ -21,7 +21,6 @@ Esta documentação descreve a API RESTful criada com Kotlin e Spring Boot, que 
 - **Spring Boot**: Framework para desenvolvimento de aplicações Java
 - **MySQL**: Sistema de gerenciamento de banco de dados
 - **Docker**: Containerização da aplicação
-- ...
 
 ## Configuração do Ambiente
 
@@ -32,3 +31,4 @@ Esta documentação descreve a API RESTful criada com Kotlin e Spring Boot, que 
 - Docker e Docker Compose
 
 ### Instruções de Configuração
+EM Breve, README em construção...
