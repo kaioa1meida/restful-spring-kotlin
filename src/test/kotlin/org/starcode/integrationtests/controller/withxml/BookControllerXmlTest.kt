@@ -221,26 +221,26 @@ class BookControllerXmlTest: AbstractIntegrationTest() {
         val book2 = books?.get(1)
         val book3 = books?.get(3)
 
-        assertEquals("Clean Code", book1!!.title)
-        assertEquals("Robert C. Martin", book1.author)
-        val localDate2 = LocalDate.of(2009, 1, 10) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
+        assertEquals("12 Angry Men", book1!!.title)
+        assertEquals("Andris Peagrim", book1.author)
+        val localDate2 = LocalDate.of(2007, 7, 17) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
         val date2 = Date.from(localDate2.atStartOfDay(ZoneId.systemDefault()).toInstant())
         assertEquals(date2, book1.launchDate)
-        assertEquals(77.00, book1.price)
+        assertEquals(720.69, book1.price)
 
-        assertEquals("Code complete", book2!!.title)
-        assertEquals("Steve McConnell", book2.author)
-        val localDate3 = LocalDate.of(2017, 11, 7) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
+        assertEquals("Adult Camp", book2!!.title)
+        assertEquals("Othelia Beat", book2.author)
+        val localDate3 = LocalDate.of(2018, 7, 23) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
         val date3 = Date.from(localDate3.atStartOfDay(ZoneId.systemDefault()).toInstant())
         assertEquals(date3, book2.launchDate)
-        assertEquals(58.00, book2.price)
+        assertEquals(242.1, book2.price)
 
-        assertEquals("Working effectively with legacy code", book3!!.title)
-        assertEquals("Michael C. Feathers", book3.author)
-        val localDate1 = LocalDate.of(2017, 11, 29) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
+        assertEquals("American Idiots", book3!!.title)
+        assertEquals("Dulcea Mackstead", book3.author)
+        val localDate1 = LocalDate.of(2022, 7, 5) //Gambiarra pois usando Date(yyyy,mm,dd) o Ano nao estava sendo convertido corretamente
         val date1 = Date.from(localDate1.atStartOfDay(ZoneId.systemDefault()).toInstant())
         assertEquals(date1, book3.launchDate)
-        assertEquals(49.00, book3.price)
+        assertEquals(856.57, book3.price)
     }
 
     @Test
@@ -313,14 +313,14 @@ class BookControllerXmlTest: AbstractIntegrationTest() {
             .body()
             .asString()
 
-        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/2"}}}"""))
-        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/4"}}}"""))
-        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/3"}}}"""))
-        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/1"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/47"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/59"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/25"}}}"""))
+        assertTrue(content.contains("""_links":{"self":{"href":"http://localhost:8888/api/v1/book/70"}}}"""))
 
         assertTrue(content.contains(""""self":{"href":"http://localhost:8888/api/v1/book?direction=asc&page=0&size=12&sort=title,asc"}"""))
 
-        assertTrue(content.contains(""""page":{"size":12,"totalElements":4,"totalPages":1,"number":0}}"""))
+        assertTrue(content.contains(""""page":{"size":12,"totalElements":104,"totalPages":9,"number":0}}"""))
     }
 
     private fun mockBook() {
