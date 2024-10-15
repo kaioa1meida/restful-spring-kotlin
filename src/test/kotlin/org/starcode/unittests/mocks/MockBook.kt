@@ -2,6 +2,8 @@ package org.starcode.unittests.mocks
 
 import org.starcode.model.Book
 import org.starcode.data.vo.BookVO
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.ArrayList
 import java.util.Date
@@ -38,7 +40,9 @@ class MockBook {
         book.author = "Author Test$number"
         book.price = number.toDouble()
         book.id = number.toLong()
-        book.launchDate = Date(2000, 1,number)
+        val localDate = LocalDate.of(2000, 1, number)
+        val date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
+        book.launchDate = date
         return book
     }
 
@@ -48,7 +52,9 @@ class MockBook {
         book.author = "Author Test$number"
         book.price = number.toDouble()
         book.key = number.toLong()
-        book.launchDate = Date(2000, 1,number)
+        val localDate = LocalDate.of(2000, 1, number)
+        val date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
+        book.launchDate = date
         return book
     }
 

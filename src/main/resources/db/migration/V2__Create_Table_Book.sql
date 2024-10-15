@@ -3,6 +3,6 @@ CREATE TABLE IF NOT EXISTS book (
    title VARCHAR(255) NOT NULL,
    author VARCHAR(255) NOT NULL,
    launch_date DATE NOT NULL,
-   price DECIMAL NOT NULL,
+   price DECIMAL(10, 2) NOT NULL,
    PRIMARY KEY (id)
 );
