@@ -71,7 +71,7 @@ class BookServiceTest {
         assertEquals("Title Test1",result.title)
         assertEquals("Author Test1",result.author)
         assertEquals(1.0,result.price)
-        assertEquals("Thu Feb 01 00:00:00 UTC 3900", result.launchDate.toString())
+        assertEquals("Sat Jan 01 00:00:00 BRST 2000", result.launchDate.toString())
     }
 
     @Test
@@ -108,7 +108,7 @@ class BookServiceTest {
         assertEquals("Title Test1",result.title)
         assertEquals("Author Test1",result.author)
         assertEquals(1.0,result.price)
-        assertEquals("Thu Feb 01 00:00:00 UTC 3900", result.launchDate.toString())
+        assertEquals("Sat Jan 01 00:00:00 BRST 2000", result.launchDate.toString())
 
     }
 
